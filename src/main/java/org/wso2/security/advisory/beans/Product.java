@@ -90,16 +90,16 @@ public class Product {
 
     public void removeVersion(String version) {
         int index = 0;
+
         for (Version versionToRemove :
             versionList) {
+
             if (versionToRemove.getVersion().equals(version)) {
                 break;
             }
             index++;
         }
-//        Version status=versionList.remove(index);
         versionList.remove(index);
-//        System.out.println("Remove Version in Product   :"+productName+"version"+status.getVersion());
     }
 
     public void setProductName(String productName) {

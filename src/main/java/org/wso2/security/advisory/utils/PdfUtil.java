@@ -3,6 +3,8 @@ package org.wso2.security.advisory.utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,6 +15,7 @@ import org.wso2.security.advisory.beans.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.Logger;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -26,24 +29,56 @@ public class PdfUtil {
 
     private static TypeToken<Map<String, Object>> typeToken = new TypeToken<Map<String, Object>>() {
     };
+    private static final Log log = LogFactory.getLog(PdfUtil.class);
 
     private List<Product> releasedProductList;
     private static Scanner scanner = new Scanner(System.in);
     public static String HTML_TEMPLATE="html_template.mustache";
+
+    private String patchListApiUrl;
+    private String patchDetailsApiUrl;
+    private String advisoryDetailsApiUrl;
+    private String patchListApiAuthenticationHeader;
+    private String patchDetailsApiAuthenticationHeader;
+    private String advisoryDetailsApiAuthenticationHeader;
 
     public static void main(String[] args) throws AdvisoryException {
 
         PdfUtil pdfUtil;
         System.out.println("------------------- Security Patch Release Automation Tool -------------------");
         pdfUtil = new PdfUtil();
+        pdfUtil.getProperties();
         pdfUtil.getReleasedProducts();
         pdfUtil.process();
+
+    }
+
+    /**
+     * This method get the access tokens and urls for calling PMT APIs from the pmtaccess property file
+     *
+     */
+    public void getProperties (){
+
+        try (InputStream in = new FileInputStream("src/main/resources/pmtaccess.properties")) {
+
+            Properties properties = new Properties();
+            properties.load(in);
+
+            patchListApiUrl=properties.getProperty("patchListApiUrl");
+            patchDetailsApiUrl=properties.getProperty("patchDetailsApiUrl");
+            advisoryDetailsApiUrl=properties.getProperty("advisoryDetailsApiUrl");
+            patchListApiAuthenticationHeader=properties.getProperty("patchListApiAuthenticationHeader");
+            patchDetailsApiAuthenticationHeader=properties.getProperty("patchDetailsApiAuthenticationHeader");
+            advisoryDetailsApiAuthenticationHeader=properties.getProperty("advisoryDetailsApiAuthenticationHeader");
+
+        } catch (IOException e) {
+            log.error("Error in loading property file.");
+        }
     }
 
     /**
      * This method process all methods generate HTML and create the pdf.
      *
-     * @throws AdvisoryException If the HTML generation fails or PDF creation fails
      */
     public void process() {
 
@@ -71,11 +106,13 @@ public class PdfUtil {
      */
     public void getPdfDetailsFromAdvisory(Pdf pdf, String advisoryNumber) {
 
-        String url = "";
         Gson gson = new Gson();
         HttpResponse response;
 
+        String url = advisoryDetailsApiUrl;
         try {
+            url=url.concat(advisoryNumber);
+
             response = getConnection(url, "Advisory");
 
             BufferedReader rd = new BufferedReader(
@@ -95,12 +132,12 @@ public class PdfUtil {
             JSONArray jsonMainArr = new JSONArray(jsonInString);
             JSONArray ob=null;
             JSONObject jo=null;
+
             for (int i = 0; i < jsonMainArr.length(); i++) {
                 jo = jsonMainArr.getJSONObject(i);
                 ob = jo.getJSONArray("value");
                 advisoryDetails.add(ob.get(0).toString());
             }
-//            jo.get("name");
 
             pdf.setOverview(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_overview",jsonMainArr)));
             pdf.setSeverity(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_severity",jsonMainArr)));
@@ -108,8 +145,10 @@ public class PdfUtil {
             pdf.setImpact(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_impact",jsonMainArr)));
             pdf.setSolution(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_solution",jsonMainArr)));
             pdf.setNotes(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_note",jsonMainArr)));
+            pdf.setCvssScore(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_cvssScore",jsonMainArr)));
 
         } catch (Exception e) {
+            log.error("Error while calling to the api");
             e.printStackTrace();
         }
     }
@@ -119,12 +158,9 @@ public class PdfUtil {
         JSONObject jo;
         for (int i = 0; i < jsonArray.length(); i++) {
             jo = jsonArray.getJSONObject(i);
-//            ob = jo.getJSONArray("name");
-//            System.out.println(jo.get("name") +"          "+tag);
             if(jo.get("name").equals(tag)){
                 return i;
             }
-//                System.out.println(jo.getJSONObject("overview_description"));
         }
         return 0;
     }
@@ -136,14 +172,15 @@ public class PdfUtil {
      */
     public String[] getPatchListForAdvisory(String advisoryNumber) {
 
-        String url = "";
         Gson gson = new Gson();
         String[] patchList = null;
         HttpResponse response = null;
         StringBuffer result = new StringBuffer();
         String line = "";
-
+        String url = patchListApiUrl;
         try {
+            url = url.concat(advisoryNumber);
+
             response = getConnection(url, "PatchList");
 
             BufferedReader rd = new BufferedReader(
@@ -162,6 +199,7 @@ public class PdfUtil {
             patchList = patches.split(",");
 
         } catch (Exception e) {
+            log.error("Error while calling to the api");
             e.printStackTrace();
         }
 
@@ -181,13 +219,11 @@ public class PdfUtil {
         affectedProducts = new ArrayList<>();
 
         try {
-
             for (String patchNumber :
                 patchList) {
-
-                String url = "";
+                String url=patchDetailsApiUrl;
+                url = url.concat(patchNumber);
                 response = getConnection(url, "Patch");
-
                 BufferedReader rd = new BufferedReader(
                     new InputStreamReader(response.getEntity().getContent()));
 
@@ -221,7 +257,6 @@ public class PdfUtil {
                     if("Carbon".equals(array[0])){
                         List<Product> productListOnKernelVersion;
                         productListOnKernelVersion= getProductListOnCarbonKernel(array[1].replace(" ", ""));
-                        System.out.println("Carbon");
                         for (Product product:
                              productListOnKernelVersion) {
                              createAffectedProducts(affectedProducts,patchNumber,product.getProductName(),product.getVersion().get(0).getVersion());
@@ -233,6 +268,7 @@ public class PdfUtil {
                 }
             }
         } catch (Exception e) {
+            log.error("Error while calling to the api");
             e.printStackTrace();
         }
 
@@ -261,12 +297,13 @@ public class PdfUtil {
         }
 
         if(!isProductReleasedDateOld(productName,productVersion)) {
-            System.out.println("True");
+
             if (isProductDuplicate) {
                 if (isVersionDuplicate) {
                     affectedProducts.get(k).getVersionList().get(j).setPatchList(new Patch(patchNumber));
                 } else {
                     version = new Version(productVersion.replace(" ", ""), isWumSupported(productName, productVersion), isPatchSupported(productName, productVersion));
+
                     version.setPatchList(new Patch(patchNumber));
                     affectedProducts.get(k).setVersion(version);
                 }
@@ -282,13 +319,14 @@ public class PdfUtil {
 
     public boolean isProductReleasedDateOld(String productName, String version){
         Date releasedDate=null;
+
         for (Product product :
             releasedProductList) {
+
             if(product.getProductName().equals(productName) && product.getVersion().get(0).getVersion().equals(version)){
                 releasedDate=product.getVersion().get(0).getReleaseDate();
-                System.out.println(productName+"      <<>>  "+version+" "+releasedDate.getYear()+" "+releasedDate.getMonth());
+
                 if(releasedDate.getYear()<114) {
-                        System.out.println(releasedDate.getYear() + " Newer " + releasedDate.getMonth());
                         return true;
                 }
             }
@@ -320,21 +358,22 @@ public class PdfUtil {
 
         try {
             HttpClient client = HttpClientBuilder.create().build();
-
             HttpGet request = null;
 
             if (api == "Patch") {
                 request = new HttpGet(url);
+                request.addHeader("Authorization", patchDetailsApiAuthenticationHeader);
             } else if (api == "Advisory") {
                 request = new HttpGet(url);
+                request.addHeader("Authorization", advisoryDetailsApiAuthenticationHeader);
             } else if (api == "PatchList") {
                 request = new HttpGet(url);
+                request.addHeader("Authorization", patchListApiAuthenticationHeader);
             }
-
             response = client.execute(request);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error while authorizing the PMT API");
         }
 
         return response;
@@ -358,7 +397,7 @@ public class PdfUtil {
 
         for (Product product :
             releasedProductList) {
-            System.out.println(product.getProductName()+":           :"+productName);
+
             if (product.getProductName().equals(productName)) {
 
                 for (Version version :
@@ -406,7 +445,6 @@ public class PdfUtil {
 
         for (Product product :
             releasedProductList) {
-//            System.out.println(product.getProductName()+":  <<>> :WSO2 "+productName);
 
             if (product.getProductName().equals(productName)) {
                 return product.getProductCode();

@@ -22,8 +22,8 @@ public class Pdf {
     @SerializedName("severity")
     private String severity = "Low";
 
-    @SerializedName("score")
-    private String score = "6.3 (CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:N/A:L)";
+    @SerializedName("cvss-score")
+    private String cvssScore = "6.3 (CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:N/A:L)";
 
     @SerializedName("overview")
     private String overview;
@@ -90,12 +90,12 @@ public class Pdf {
         this.severity = severity;
     }
 
-    public String getScore() {
-        return score;
+    public String getCvssScore() {
+        return cvssScore;
     }
 
-    public void setScore(String score) {
-        this.score = score;
+    public void setCvssScore(String score) {
+        this.cvssScore = score;
     }
 
     public void setOverview(String overview) {
@@ -166,6 +166,7 @@ public class Pdf {
         }
 
     }
+
     /**
      * This method sort the product list according to the product name ascending order.
      */
@@ -192,7 +193,7 @@ public class Pdf {
     }
 
     /**
-     * This method check all the affected products and separate the Wum products to build the xml file for pdf to the document builder.
+     * This method check all the affected products and separate the Wum supported products from affected product list to build the xml file for pdf to the document builder.
      */
     public void setAffectedWUMProducts() {
 

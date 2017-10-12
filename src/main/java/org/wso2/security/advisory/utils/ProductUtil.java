@@ -56,13 +56,10 @@ public class ProductUtil {
                     Element eElement = (Element) nNode;
                     Product product = new Product();
                     DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-//                    LocalDateTime dateTime =LocalDateTime.parse(eElement.getElementsByTagName("releaseDate").item(0).getTextContent());
                     product.setProductName(eElement.getElementsByTagName("name").item(0).getTextContent());
                     product.setProductCode(eElement.getElementsByTagName("codeName").item(0).getTextContent());
                     product.setVersion(new Version(eElement.getElementsByTagName("version").item(0).getTextContent(), "true".equals(eElement.getElementsByTagName("isWumSupported").item(0).getTextContent()), "true".equals(eElement.getElementsByTagName("isPatchSupported").item(0).getTextContent())));
-                        product.getVersion().get(0).setReleaseDate(dateFormat.parse(eElement.getElementsByTagName("releaseDate").item(0).getTextContent()));
-//                    product.getVersion().get(0).setReleaseDate(dateTime);
-//                    System.out.println(LocalDateTime.parse(eElement.getElementsByTagName("releaseDate").item(0).getTextContent())+"  "+product.getReleaseDate());
+                    product.getVersion().get(0).setReleaseDate(dateFormat.parse(eElement.getElementsByTagName("releaseDate").item(0).getTextContent()));
                     product.setPlatformVersion(eElement.getElementsByTagName("platformVersion").item(0).getTextContent());
                     product.setKernelVersion(eElement.getElementsByTagName("kernelVersion").item(0).getTextContent());
                     productsList.add(product);

@@ -150,7 +150,7 @@ public class SecurityAdvisoryGenerator {
             //add advisory pdf details into the root element
             rootElement.appendChild(getProductElements(doc, "Title", pdf.getTitle()));
             rootElement.appendChild(getProductElements(doc, "Severity", pdf.getSeverity()));
-            rootElement.appendChild(getProductElements(doc, "Score", pdf.getScore()));
+            rootElement.appendChild(getProductElements(doc, "CvssScore", pdf.getCvssScore()));
             rootElement.appendChild(getProductElements(doc, "Overview", pdf.getOverview()));
             rootElement.appendChild(getProductElements(doc, "Description", pdf.getDescription()));
             rootElement.appendChild(getProductElements(doc, "Impact", pdf.getImpact()));
@@ -164,10 +164,8 @@ public class SecurityAdvisoryGenerator {
             for (Product product :
                 pdfAllAffectedProducts) {
                 allAffectedProducts.appendChild(getProducts(doc, product.getProductCode(), product.getProductName(), product.getVersion()));
-//                Product p= (Product) getProducts(doc, product.getProductCode(), product.getProductName(), product.getVersion());
-
             }
-//
+
             rootElement.appendChild(getProductElements(doc, "Thanks", pdf.getThanks()));
 
             //for pretty print
@@ -176,12 +174,13 @@ public class SecurityAdvisoryGenerator {
 
             //write to console or file
             StreamResult console = new StreamResult(System.out);
+
             System.out.println("Enter the path to store the Pdf.xml file : ( src/main/resources ) ");
             String pdfXmlFilePath = scanner.nextLine();
             StreamResult file = new StreamResult(new File(pdfXmlFilePath + "/pdf.xml"));
 
             //write data
-//            transformer.transform(source, console);
+            transformer.transform(source, console);
             transformer.transform(source, file);
 
         } catch (Exception e) {
@@ -221,7 +220,6 @@ public class SecurityAdvisoryGenerator {
             for (Patch patch :
                 version.getPatchList()) {
                 patchList.appendChild(getProductElements(doc, "patch", patch.getName()));
-                System.out.println(productCode+"\t"+productName+"\t"+version.getVersion()+"\t"+patch.getName());
             }
         }
 
@@ -259,6 +257,7 @@ public class SecurityAdvisoryGenerator {
         File xmlFile = new File(filePath);
 
         ArrayList<Product> allAffectedProductsList = new ArrayList<>();
+        ArrayList<Product> affectedProductsList = new ArrayList<>();
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder;
@@ -277,7 +276,7 @@ public class SecurityAdvisoryGenerator {
 
             pdf.setTitle(getTagValue("Title", element, 0));
             pdf.setSeverity(getTagValue("Severity", element, 0));
-            pdf.setScore(getTagValue("Score", element, 0));
+            pdf.setCvssScore(getTagValue("CvssScore", element, 0));
             pdf.setOverview(getTagValue("Overview", element, 0));
             pdf.setDescription(getTagValue("Description", element, 0));
             pdf.setImpact(getTagValue("Impact", element, 0));
@@ -289,9 +288,10 @@ public class SecurityAdvisoryGenerator {
             Element a = (Element) allAffectedProductsNodeList.item(0);
 
             for (int i = 0; i < a.getElementsByTagName("productName").getLength(); i++) {
+                affectedProductsList.add(getProduct(allAffectedProductsNodeList.item(0), i));
                 allAffectedProductsList.add(getProduct(allAffectedProductsNodeList.item(0), i));
             }
-            pdf.setAffectedProducts(allAffectedProductsList);
+            pdf.setAffectedProducts(affectedProductsList);
             pdf.setAllAffectedProducts(allAffectedProductsList);
 
         } catch (SAXException e) {
