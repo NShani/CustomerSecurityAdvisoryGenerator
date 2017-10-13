@@ -8,12 +8,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.wso2.msf4j.template.MustacheTemplateEngine;
+import org.wso2.security.advisory.beans.Patch;
+import org.wso2.security.advisory.beans.Pdf;
+import org.wso2.security.advisory.beans.Product;
+import org.wso2.security.advisory.beans.Version;
 import org.wso2.security.advisory.exception.AdvisoryException;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xhtmlrenderer.resource.XMLResource;
 import org.xml.sax.SAXException;
-
-import org.wso2.security.advisory.beans.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -28,7 +30,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Scanner;
 
 import static org.wso2.security.advisory.utils.PdfUtil.HTML_TEMPLATE;
 
@@ -49,6 +53,86 @@ public class SecurityAdvisoryGenerator {
         securityAdvisoryGenerator.buildPdfFromXml(pdf);
         pdf.setAffectedWUMProducts();
         securityAdvisoryGenerator.generateGsonString(pdf);
+    }
+
+    /**
+     * This method gives the Product Child elements to build the xml file for pdf to the document builder.
+     *
+     * @param doc   is the Document to build the xml file.
+     * @param name  is the tag that should be in the xml file.
+     * @param value is the value for the given tag name.
+     */
+    private static Node getProductElements(Document doc, String name, String value) {
+
+        Element node = doc.createElement(name);
+
+        node.appendChild(doc.createTextNode(value));
+
+        return node;
+    }
+
+    /**
+     * This method parse the Product element from the given xml file for building the pdf.
+     *
+     * @param node  is the element node that need to parse into a Product.
+     * @param index is the index of the Product from the product list.
+     */
+    private static Product getProduct(Node node, int index) {
+
+        Element element = (Element) node;
+        ArrayList<Version> versionList = new ArrayList<>();
+
+        Element c = (Element) element.getElementsByTagName("versionList").item(index);
+
+        for (int i = 0; i < c.getElementsByTagName("Version").getLength(); i++) {
+            versionList.add(getVersion(element.getElementsByTagName("versionList").item(index), i));
+        }
+
+        Product product = new Product(getTagValue("productCode", element, index), getTagValue("productName", element, index), versionList);
+
+        return product;
+    }
+
+    /**
+     * This method parse the Version element of Product from the given xml file for building the pdf.
+     *
+     * @param node  is the element node that need to parse into a Version.
+     * @param index is the index of the Version from the version list.
+     */
+    private static Version getVersion(Node node, int index) {
+
+        Version version = null;
+
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) node;
+            version = new Version(getTagValue("versionName", element, index), Boolean.valueOf(getTagValue("isWumSupported", element, index)), Boolean.valueOf(getTagValue("isPatchSupported", element, index)));
+            Element c = (Element) element.getElementsByTagName("patchNumberList").item(index);
+
+            for (int h = 0; h < c.getElementsByTagName("patch").getLength(); h++) {
+                if (version.getPatchList().size() == 0) {
+                    version.setPatchList(new Patch(getTagValue("patch", c, h)));
+                } else {
+                    version.setPatchList(new Patch(getTagValue("patch", c, h), false));
+                }
+            }
+        }
+
+        return version;
+    }
+
+    /**
+     * This method parse the element of Product for a given tag name within a given element.
+     *
+     * @param tag     that is want to parse from xml for a given element.
+     * @param element is the place where tag exists.
+     * @param index   is the index of the Version of Product from the version list.
+     */
+    private static String getTagValue(String tag, Element element, int index) {
+
+        NodeList nodeList = element.getElementsByTagName(tag).item(index).getChildNodes();
+        Node node = nodeList.item(0);
+
+        return node.getNodeValue();
     }
 
     /**
@@ -228,22 +312,6 @@ public class SecurityAdvisoryGenerator {
     }
 
     /**
-     * This method gives the Product Child elements to build the xml file for pdf to the document builder.
-     *
-     * @param doc   is the Document to build the xml file.
-     * @param name  is the tag that should be in the xml file.
-     * @param value is the value for the given tag name.
-     */
-    private static Node getProductElements(Document doc, String name, String value) {
-
-        Element node = doc.createElement(name);
-
-        node.appendChild(doc.createTextNode(value));
-
-        return node;
-    }
-
-    /**
      * This method generate the Pdf from the given xml file.
      *
      * @param pdf is the Document to build the xml file.
@@ -301,71 +369,6 @@ public class SecurityAdvisoryGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * This method parse the Product element from the given xml file for building the pdf.
-     *
-     * @param node  is the element node that need to parse into a Product.
-     * @param index is the index of the Product from the product list.
-     */
-    private static Product getProduct(Node node, int index) {
-
-        Element element = (Element) node;
-        ArrayList<Version> versionList = new ArrayList<>();
-
-        Element c = (Element) element.getElementsByTagName("versionList").item(index);
-
-        for (int i = 0; i < c.getElementsByTagName("Version").getLength(); i++) {
-            versionList.add(getVersion(element.getElementsByTagName("versionList").item(index), i));
-        }
-
-        Product product = new Product(getTagValue("productCode", element, index), getTagValue("productName", element, index), versionList);
-
-        return product;
-    }
-
-    /**
-     * This method parse the Version element of Product from the given xml file for building the pdf.
-     *
-     * @param node  is the element node that need to parse into a Version.
-     * @param index is the index of the Version from the version list.
-     */
-    private static Version getVersion(Node node, int index) {
-
-        Version version = null;
-
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            Element element = (Element) node;
-            version = new Version(getTagValue("versionName", element, index), Boolean.valueOf(getTagValue("isWumSupported", element, index)), Boolean.getBoolean(getTagValue("isPatchSupported", element, index)));
-            Element c = (Element) element.getElementsByTagName("patchNumberList").item(index);
-
-            for (int h = 0; h < c.getElementsByTagName("patch").getLength(); h++) {
-                if(version.getPatchList().size() == 0) {
-                    version.setPatchList(new Patch(getTagValue("patch", c, h)));
-                }
-                else {
-                    version.setPatchList(new Patch(getTagValue("patch", c, h),false));
-                }
-            }
-        }
-
-        return version;
-    }
-
-    /**
-     * This method parse the element of Product for a given tag name within a given element.
-     *
-     * @param tag     that is want to parse from xml for a given element.
-     * @param element is the place where tag exists.
-     * @param index   is the index of the Version of Product from the version list.
-     */
-    private static String getTagValue(String tag, Element element, int index) {
-
-        NodeList nodeList = element.getElementsByTagName(tag).item(index).getChildNodes();
-        Node node = nodeList.item(0);
-
-        return node.getNodeValue();
     }
 
 }

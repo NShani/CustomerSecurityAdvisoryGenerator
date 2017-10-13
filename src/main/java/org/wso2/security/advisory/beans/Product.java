@@ -4,7 +4,6 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * This is used to populate the Product object which is affected by patches, from the data received from the PMT API.
@@ -38,10 +37,6 @@ public class Product {
         this.productCode = productCode;
         this.productName = productName;
         this.versionList.add(version);
-    }
-
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
     }
 
     public ArrayList<Version> getVersionList() {
@@ -80,12 +75,16 @@ public class Product {
         return productCode;
     }
 
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+
     public String getProductName() {
         return productName;
     }
 
-    public void setVersion(Version version) {
-        versionList.add(version);
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     public void removeVersion(String version) {
@@ -102,12 +101,12 @@ public class Product {
         versionList.remove(index);
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
     public ArrayList<Version> getVersion() {
         return versionList;
+    }
+
+    public void setVersion(Version version) {
+        versionList.add(version);
     }
 
 }

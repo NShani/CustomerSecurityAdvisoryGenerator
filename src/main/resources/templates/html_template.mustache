@@ -62,6 +62,9 @@
           }
 
 
+
+
+
     </style>
 </head>
 <body>
@@ -114,9 +117,9 @@
                                 {{product-name}}
                                 {{#product-versions}}
                                     {{#version}}
-                                            {{.}}
+                                        {{.}}
                                     {{/version}}
-                                    <span > , </span>
+                                    <span> , </span>
                                 {{/product-versions}}
                             </li>
                         {{/all-affected-products}}
@@ -197,11 +200,11 @@
                                 <td style=" border-collapse: collapse; border: 0.5px solid black">  {{product-name}}</td>
                                 <td style=" border-collapse: collapse; border: 0.5px solid black">
                                     {{#product-versions}}
-                                    {{#version}}
-                                        <li style=" border-collapse: collapse; align-content: center; border: 0.5px solid black;list-style: none">
-                                            {{.}}
-                                        </li>
-                                    {{/version}}
+                                        {{#version}}
+                                            <li style=" border-collapse: collapse; align-content: center; border: 0.5px solid black;list-style: none">
+                                                {{.}}
+                                            </li>
+                                        {{/version}}
                                     {{/product-versions}}
                                 </td>
                             </tr>
@@ -224,7 +227,8 @@
         <span class="break-page"></span>
         <tr>
             <td colspan="2" style="padding: 7% 7%; font-family: arial; font-size: 18px; line-height: 30px;">
-                <table id="patch-table" style="border-collapse: collapse;border:1px solid black; line-height: 40px;vertical-align: top;">
+                <table id="patch-table"
+                       style="border-collapse: collapse;border:1px solid black; line-height: 40px;vertical-align: top;">
                     <tr>
                         <th style="background-color: #cccccc;color: #232323; border-collapse: collapse; align-content: center; border: 0.5px solid black;width: 60px">
                             Code
@@ -240,46 +244,46 @@
                         </th>
                     </tr>
                     {{#affected-products}}
-                        <tr>
-                            <td style=" border-collapse: collapse; align-content: center; border: 0.5px solid black"> {{product-code}}</td>
-                            <td style=" border-collapse: collapse; align-content: center; border: 0.5px solid black">  {{product-name}}</td>
-                            <!--<td style=" border-collapse: collapse; align-content:center; vertical-align: top; border: 0.5px solid black;list-style: none">-->
-                               <td>
-                                {{#product-versions}}
-                                    <li style=" border-collapse: collapse; border: 0.5px solid black;list-style: none">
-                                <!--<li>-->
-                                    {{#version-patch}}
+                    <tr>
+                        <td style=" border-collapse: collapse; align-content: center; border: 0.5px solid black"> {{product-code}}</td>
+                        <td style=" border-collapse: collapse; align-content: center; border: 0.5px solid black">  {{product-name}}</td>
+                        <!--<td style=" border-collapse: collapse; align-content:center; vertical-align: top; border: 0.5px solid black;list-style: none">-->
+                    <td>
+                        {{#product-versions}}
+                        <li style=" border-collapse: collapse; border: 0.5px solid black;list-style: none">
+                            <!--<li>-->
+                            {{#version-patch}}
                                 <tr>
                                     {{#version_state}}
-                                    {{version}}
+                                        {{version}}
                                     {{/version_state}}
                                     {{^version_state}}
                                         {{state}}
                                     {{/version_state}}
-                                        <!--version[0]-->
+                                    <!--version[0]-->
                                 </tr>
-                                {{/version-patch}}
-                                    </li>
-                                        <!--<li style=" border-collapse: collapse; border: 1px solid black;list-style: none; width: 80px">-->
-                                    <!--&lt;!&ndash;&lt;!&ndash;<tr style=" border-collapse: collapse; border: 1px solid black;list-style: none">&ndash;&gt;&ndash;&gt;-->
-                                            <!--{{.}}-->
-                                        <!--</li>-->
-                                {{/product-versions}}
-                            </td>
-                            <!--<td style=" border-collapse: collapse; align-content: center; vertical-align: top; border:0.5px solid black;list-style: none">-->
+                            {{/version-patch}}
+                            </li>
+                            <!--<li style=" border-collapse: collapse; border: 1px solid black;list-style: none; width: 80px">-->
+                            <!--&lt;!&ndash;&lt;!&ndash;<tr style=" border-collapse: collapse; border: 1px solid black;list-style: none">&ndash;&gt;&ndash;&gt;-->
+                            <!--{{.}}-->
+                            <!--</li>-->
+                        {{/product-versions}}
+                        </td>
+                        <!--<td style=" border-collapse: collapse; align-content: center; vertical-align: top; border:0.5px solid black;list-style: none">-->
                         <td>
-                                    {{#product-versions}}
-                                    <li style=" border-collapse: collapse; align-content: center; border: 0.5px solid black;list-style: none">
+                            {{#product-versions}}
+                                <li style=" border-collapse: collapse; align-content: center; border: 0.5px solid black;list-style: none">
                                     <!--<li>-->
-                                            {{#version-patch}}
-                                            <tr>
-                                                {{patch-name}}
-                                                        <!--{{.}}-->
-                                            </tr>
-                                            {{/version-patch}}
-                                    </li>
-                                    {{/product-versions}}
-                            </td>
+                                    {{#version-patch}}
+                                        <tr>
+                                            {{patch-name}}
+                                            <!--{{.}}-->
+                                        </tr>
+                                    {{/version-patch}}
+                                </li>
+                            {{/product-versions}}
+                        </td>
                         </tr>
                     {{/affected-products}}
                 </table>

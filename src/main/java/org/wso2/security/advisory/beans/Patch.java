@@ -11,13 +11,13 @@ public class Patch {
     private final static Logger logger = Logger.getLogger(Patch.class);
 
     @SerializedName("version_state")
-    boolean versionState=true;
+    boolean versionState = true;
 
     @SerializedName("patch-name")
     private String name;
 
     @SerializedName("state")
-    private String state=".";
+    private String state = ".";
 
     private ArrayList<String> supportJIRAs;
     private String platform;
@@ -39,9 +39,10 @@ public class Patch {
         this.name = name;
 
     }
-    public Patch(String name,boolean versionState) {
+
+    public Patch(String name, boolean versionState) {
         this.name = name;
-        this.versionState=versionState;
+        this.versionState = versionState;
 
     }
 

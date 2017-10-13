@@ -5,36 +5,34 @@ import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.wso2.security.advisory.beans.Patch;
-import org.wso2.security.advisory.exception.AdvisoryException;
-import org.wso2.security.advisory.handler.SecurityAdvisoryGenerator;
-import org.wso2.security.advisory.beans.*;
-
-import java.io.*;
-import java.util.*;
-import java.util.logging.Logger;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.wso2.security.advisory.beans.Patch;
+import org.wso2.security.advisory.beans.Pdf;
+import org.wso2.security.advisory.beans.Product;
+import org.wso2.security.advisory.beans.Version;
+import org.wso2.security.advisory.exception.AdvisoryException;
+import org.wso2.security.advisory.handler.SecurityAdvisoryGenerator;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This is the manager class which handles HTML generation from the template and PDF creation.
  */
 public class PdfUtil {
 
+    private static final Log log = LogFactory.getLog(PdfUtil.class);
+    public static String HTML_TEMPLATE = "html_template.mustache";
     private static TypeToken<Map<String, Object>> typeToken = new TypeToken<Map<String, Object>>() {
     };
-    private static final Log log = LogFactory.getLog(PdfUtil.class);
-
-    private List<Product> releasedProductList;
     private static Scanner scanner = new Scanner(System.in);
-    public static String HTML_TEMPLATE="html_template.mustache";
-
+    private List<Product> releasedProductList;
     private String patchListApiUrl;
     private String patchDetailsApiUrl;
     private String advisoryDetailsApiUrl;
@@ -55,21 +53,20 @@ public class PdfUtil {
 
     /**
      * This method get the access tokens and urls for calling PMT APIs from the pmtaccess property file
-     *
      */
-    public void getProperties (){
+    public void getProperties() {
 
         try (InputStream in = new FileInputStream("src/main/resources/pmtaccess.properties")) {
 
             Properties properties = new Properties();
             properties.load(in);
 
-            patchListApiUrl=properties.getProperty("patchListApiUrl");
-            patchDetailsApiUrl=properties.getProperty("patchDetailsApiUrl");
-            advisoryDetailsApiUrl=properties.getProperty("advisoryDetailsApiUrl");
-            patchListApiAuthenticationHeader=properties.getProperty("patchListApiAuthenticationHeader");
-            patchDetailsApiAuthenticationHeader=properties.getProperty("patchDetailsApiAuthenticationHeader");
-            advisoryDetailsApiAuthenticationHeader=properties.getProperty("advisoryDetailsApiAuthenticationHeader");
+            patchListApiUrl = properties.getProperty("patchListApiUrl");
+            patchDetailsApiUrl = properties.getProperty("patchDetailsApiUrl");
+            advisoryDetailsApiUrl = properties.getProperty("advisoryDetailsApiUrl");
+            patchListApiAuthenticationHeader = properties.getProperty("patchListApiAuthenticationHeader");
+            patchDetailsApiAuthenticationHeader = properties.getProperty("patchDetailsApiAuthenticationHeader");
+            advisoryDetailsApiAuthenticationHeader = properties.getProperty("advisoryDetailsApiAuthenticationHeader");
 
         } catch (IOException e) {
             log.error("Error in loading property file.");
@@ -78,7 +75,6 @@ public class PdfUtil {
 
     /**
      * This method process all methods generate HTML and create the pdf.
-     *
      */
     public void process() {
 
@@ -111,7 +107,7 @@ public class PdfUtil {
 
         String url = advisoryDetailsApiUrl;
         try {
-            url=url.concat(advisoryNumber);
+            url = url.concat(advisoryNumber);
 
             response = getConnection(url, "Advisory");
 
@@ -130,8 +126,8 @@ public class PdfUtil {
 
             ArrayList<String> advisoryDetails = new ArrayList<String>();
             JSONArray jsonMainArr = new JSONArray(jsonInString);
-            JSONArray ob=null;
-            JSONObject jo=null;
+            JSONArray ob = null;
+            JSONObject jo = null;
 
             for (int i = 0; i < jsonMainArr.length(); i++) {
                 jo = jsonMainArr.getJSONObject(i);
@@ -139,13 +135,13 @@ public class PdfUtil {
                 advisoryDetails.add(ob.get(0).toString());
             }
 
-            pdf.setOverview(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_overview",jsonMainArr)));
-            pdf.setSeverity(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_severity",jsonMainArr)));
-            pdf.setDescription(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_description",jsonMainArr)));
-            pdf.setImpact(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_impact",jsonMainArr)));
-            pdf.setSolution(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_solution",jsonMainArr)));
-            pdf.setNotes(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_note",jsonMainArr)));
-            pdf.setCvssScore(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_cvssScore",jsonMainArr)));
+            pdf.setOverview(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_overview", jsonMainArr)));
+            pdf.setSeverity(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_severity", jsonMainArr)));
+            pdf.setDescription(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_description", jsonMainArr)));
+            pdf.setImpact(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_impact", jsonMainArr)));
+            pdf.setSolution(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_solution", jsonMainArr)));
+            pdf.setNotes(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_note", jsonMainArr)));
+            pdf.setCvssScore(advisoryDetails.get(getIndexOfObjectFromJsonArray("overview_cvssScore", jsonMainArr)));
 
         } catch (Exception e) {
             log.error("Error while calling to the api");
@@ -154,11 +150,11 @@ public class PdfUtil {
     }
 
     public int getIndexOfObjectFromJsonArray(String tag, JSONArray jsonArray) throws JSONException {
-        JSONArray ob=null;
+        JSONArray ob = null;
         JSONObject jo;
         for (int i = 0; i < jsonArray.length(); i++) {
             jo = jsonArray.getJSONObject(i);
-            if(jo.get("name").equals(tag)){
+            if (jo.get("name").equals(tag)) {
                 return i;
             }
         }
@@ -221,7 +217,7 @@ public class PdfUtil {
         try {
             for (String patchNumber :
                 patchList) {
-                String url=patchDetailsApiUrl;
+                String url = patchDetailsApiUrl;
                 url = url.concat(patchNumber);
                 response = getConnection(url, "Patch");
                 BufferedReader rd = new BufferedReader(
@@ -254,16 +250,16 @@ public class PdfUtil {
                     Object jsonObject = jsonArray.get(j);
                     String[] array = jsonObject.toString().split("(?=\\s\\d)");//|(?<=\d)(?=\D)
 
-                    if("Carbon".equals(array[0])){
+                    if ("Carbon".equals(array[0])) {
                         List<Product> productListOnKernelVersion;
-                        productListOnKernelVersion= getProductListOnCarbonKernel(array[1].replace(" ", ""));
-                        for (Product product:
-                             productListOnKernelVersion) {
-                             createAffectedProducts(affectedProducts,patchNumber,product.getProductName(),product.getVersion().get(0).getVersion());
+                        productListOnKernelVersion = getProductListOnCarbonKernel(array[1].replace(" ", ""));
+                        for (Product product :
+                            productListOnKernelVersion) {
+                            createAffectedProducts(affectedProducts, patchNumber, product.getProductName(),
+                                product.getVersion().get(0).getVersion());
                         }
-                    }
-                    else {
-                        createAffectedProducts(affectedProducts,patchNumber,"WSO2 ".concat(array[0]),array[1]);
+                    } else {
+                        createAffectedProducts(affectedProducts, patchNumber, "WSO2 ".concat(array[0]), array[1]);
                     }
                 }
             }
@@ -275,20 +271,20 @@ public class PdfUtil {
         return affectedProducts;
     }
 
-    public void createAffectedProducts(ArrayList<Product> affectedProducts, String patchNumber, String productName,String productVersion){
+    public void createAffectedProducts(ArrayList<Product> affectedProducts, String patchNumber, String productName, String productVersion) {
         boolean isProductDuplicate = false;
         boolean isVersionDuplicate = false;
         int k;
-        int j=0;
+        int j = 0;
         Version version;
 
         for (k = 0; k < affectedProducts.size(); k++) {
             if (affectedProducts.get(k).getProductName().equals(productName)) {
                 isProductDuplicate = true;
-                List<Version> versionList=affectedProducts.get(k).getVersionList();
+                List<Version> versionList = affectedProducts.get(k).getVersionList();
                 for (j = 0; j < versionList.size(); j++) {
-                    if(versionList.get(j).getVersion().equals(productVersion.replaceAll(" ",""))){
-                        isVersionDuplicate=true;
+                    if (versionList.get(j).getVersion().equals(productVersion.replaceAll(" ", ""))) {
+                        isVersionDuplicate = true;
                         break;
                     }
                 }
@@ -296,19 +292,20 @@ public class PdfUtil {
             }
         }
 
-        if(!isProductReleasedDateOld(productName,productVersion)) {
-
+        if (!isProductReleasedDateOld(productName, productVersion)) {
             if (isProductDuplicate) {
                 if (isVersionDuplicate) {
                     affectedProducts.get(k).getVersionList().get(j).setPatchList(new Patch(patchNumber));
                 } else {
-                    version = new Version(productVersion.replace(" ", ""), isWumSupported(productName, productVersion), isPatchSupported(productName, productVersion));
+                    version = new Version(productVersion.replace(" ", ""), isWumSupported(productName,
+                        productVersion), isPatchSupported(productName, productVersion));
 
                     version.setPatchList(new Patch(patchNumber));
                     affectedProducts.get(k).setVersion(version);
                 }
             } else {
-                version = new Version(productVersion.replace(" ", ""), isWumSupported(productName, productVersion), isPatchSupported(productName, productVersion));
+                version = new Version(productVersion.replace(" ", ""), isWumSupported(productName,
+                    productVersion), isPatchSupported(productName, productVersion));
 
                 version.setPatchList(new Patch(patchNumber));
                 Product product = new Product(getProductCode(productName), productName, version);
@@ -317,29 +314,30 @@ public class PdfUtil {
         }
     }
 
-    public boolean isProductReleasedDateOld(String productName, String version){
-        Date releasedDate=null;
+    public boolean isProductReleasedDateOld(String productName, String version) {
+        Date releasedDate = null;
 
         for (Product product :
             releasedProductList) {
 
-            if(product.getProductName().equals(productName) && product.getVersion().get(0).getVersion().equals(version)){
-                releasedDate=product.getVersion().get(0).getReleaseDate();
+            if (product.getProductName().equals(productName) && product.getVersion().get(0).getVersion().equals(version)) {
 
-                if(releasedDate.getYear()<114) {
-                        return true;
+                releasedDate = product.getVersion().get(0).getReleaseDate();
+
+                if (releasedDate.getYear() < 114) {
+                    return true;
                 }
             }
         }
         return false;
     }
 
-    public List<Product> getProductListOnCarbonKernel(String kernelVersion){
-        ArrayList<Product> productListOnKernelVersion= new ArrayList<>();
+    public List<Product> getProductListOnCarbonKernel(String kernelVersion) {
+        ArrayList<Product> productListOnKernelVersion = new ArrayList<>();
         for (Product product :
             releasedProductList) {
 
-            if(product.getKernelVersion().equals(kernelVersion)) {
+            if (product.getKernelVersion().equals(kernelVersion)) {
                 productListOnKernelVersion.add(product);
             }
         }
@@ -370,6 +368,7 @@ public class PdfUtil {
                 request = new HttpGet(url);
                 request.addHeader("Authorization", patchListApiAuthenticationHeader);
             }
+
             response = client.execute(request);
 
         } catch (IOException e) {

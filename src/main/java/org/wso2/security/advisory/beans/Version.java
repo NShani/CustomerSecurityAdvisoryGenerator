@@ -25,15 +25,6 @@ public class Version {
 
     @SerializedName("expanded-versions")
     private int expandedVersions;
-
-    public Date getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(Date releaseDate) {
-        this.releaseDate = releaseDate;
-    }
-
     private Date releaseDate;
 
     public Version(String version) {
@@ -44,6 +35,14 @@ public class Version {
         this.version = version;
         this.isWumSupported = isWumSupported;
         this.isPatchSupported = isPatchSupported;
+    }
+
+    public Date getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(Date releaseDate) {
+        this.releaseDate = releaseDate;
     }
 
     public boolean isWumSupported() {
@@ -68,15 +67,15 @@ public class Version {
 
     public void setPatchList(Patch patch) {
         this.patchList.add(patch);
-        expandedVersions=patchList.size();
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
+        expandedVersions = patchList.size();
     }
 
     public String getVersion() {
         return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
 }

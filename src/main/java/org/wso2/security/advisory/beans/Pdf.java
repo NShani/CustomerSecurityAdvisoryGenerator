@@ -3,7 +3,10 @@ package org.wso2.security.advisory.beans;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 
 /**
  * This is used to populate the Pdf object from the data received from the PMT API.
@@ -98,12 +101,12 @@ public class Pdf {
         this.cvssScore = score;
     }
 
-    public void setOverview(String overview) {
-        this.overview = overview;
-    }
-
     public String getOverview() {
         return overview;
+    }
+
+    public void setOverview(String overview) {
+        this.overview = overview;
     }
 
     public String getDescription() throws IOException {
@@ -138,12 +141,12 @@ public class Pdf {
         this.publicDisclosure = publicDisclosure;
     }
 
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
     public String getNotes() {
         return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public ArrayList<Product> getAffectedProducts() {
@@ -162,7 +165,9 @@ public class Pdf {
         sortProductList(productList);
         for (Product product :
             productList) {
-            Collections.sort(product.getVersion(), (Version first, Version second) -> Integer.compare(Integer.parseInt(second.getVersion().replaceAll("\\.", "")), Integer.parseInt(first.getVersion().replaceAll("\\.", ""))));
+            Collections.sort(product.getVersion(), (Version first, Version second) ->
+                Integer.compare(Integer.parseInt(second.getVersion().replaceAll("\\.", "")),
+                    Integer.parseInt(first.getVersion().replaceAll("\\.", ""))));
         }
 
     }
@@ -175,12 +180,12 @@ public class Pdf {
 
     }
 
-    public void setThanks(String thanks) {
-        this.thanks = thanks;
-    }
-
     public String getThanks() {
         return thanks;
+    }
+
+    public void setThanks(String thanks) {
+        this.thanks = thanks;
     }
 
     public ArrayList<Product> getAllAffectedProducts() {
@@ -189,11 +194,13 @@ public class Pdf {
 
     public void setAllAffectedProducts(ArrayList<Product> affectedProducts) {
         sortVersionList(affectedProducts);
+
         this.allAffectedProducts = affectedProducts;
     }
 
     /**
-     * This method check all the affected products and separate the Wum supported products from affected product list to build the xml file for pdf to the document builder.
+     * This method check all the affected products and separate the Wum supported products from affected product list
+     * to build the xml file for pdf to the document builder.
      */
     public void setAffectedWUMProducts() {
 
@@ -222,9 +229,15 @@ public class Pdf {
                     }
 
                     if (duplicate) {
+
                         affectedWUMProducts.get(indexOfWumProduct).setVersion(version);
-                        versionsToRemove.add(version);
+
+                        if (!version.isPatchSupported()) {
+                            versionsToRemove.add(version);
+                        }
+
                     } else {
+
                         affectedWUMProduct = new Product(product.getProductCode(), product.getProductName(), version);
                         affectedWUMProducts.add(affectedWUMProduct);
 
