@@ -162,14 +162,24 @@ public class Pdf {
      * This method sort the product list according to the product name ascending order.
      */
     public void sortVersionList(ArrayList<Product> productList) {
+
         sortProductList(productList);
+
         for (Product product :
             productList) {
+
             Collections.sort(product.getVersion(), (Version first, Version second) ->
                 Integer.compare(Integer.parseInt(second.getVersion().replaceAll("\\.", "")),
                     Integer.parseInt(first.getVersion().replaceAll("\\.", ""))));
         }
 
+        for (Product product :
+            productList) {
+
+            Collections.sort(product.getVersion(), (Version first, Version second) ->
+                Integer.compare(Integer.parseInt(second.getVersion().split("\\.")[0]),
+                    Integer.parseInt(first.getVersion().split("\\.")[0])));
+        }
     }
 
     /**
